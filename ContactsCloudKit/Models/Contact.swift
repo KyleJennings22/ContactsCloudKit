@@ -14,6 +14,7 @@ class Contact {
   var phoneNumber: String?
   var emailAddress: String?
   
+  // Need a recordID for cloudkit
   let recordID: CKRecord.ID
   
   init(name: String, phoneNumber: String?, emailAddress: String?, recordID: CKRecord.ID = CKRecord.ID(recordName: UUID().uuidString)) {
@@ -24,6 +25,7 @@ class Contact {
   }
 }
 
+// Have to initialize a contact from a CKRecord
 extension Contact {
   convenience init?(ckRecord: CKRecord) {
     guard let name = ckRecord[ContactKeys.nameKey] as? String
@@ -35,12 +37,24 @@ extension Contact {
   }
 }
 
+// Conforming to equatable
 extension Contact: Equatable {
   static func == (lhs: Contact, rhs: Contact) -> Bool {
     return lhs.recordID == rhs.recordID
   }
 }
 
+// Extension for sorting
+extension Contact: SearchableContactDelegate {
+  func matches(searchTerm: String) -> Bool {
+    if self.name.lowercased().contains(searchTerm.lowercased()) {
+      return true
+    }
+    return false
+  }
+}
+
+// Have to extend CKRecord to be able to accept a contact as an initializer
 extension CKRecord {
   convenience init(contact: Contact) {
     self.init(recordType: ContactKeys.recordTypeKey, recordID: contact.recordID)
@@ -50,6 +64,7 @@ extension CKRecord {
   }
 }
 
+// Making things a bit more safe
 struct ContactKeys {
   static let recordTypeKey = "Contact"
   fileprivate static let nameKey = "name"
